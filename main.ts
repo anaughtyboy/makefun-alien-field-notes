@@ -45,10 +45,16 @@ const bytes = Buffer.from(REVIEW, "utf8");
 writeFileSync(outPath, bytes);
 
 // Read the file back and confirm it is byte-for-byte the review,
-// with no trailing newline.
+// with no trailing newline and no byte-order mark slipped in.
 const onDisk = readFileSync(outPath);
+if (onDisk.length !== bytes.length) {
+  fail(`entry.txt is ${onDisk.length} bytes, expected ${bytes.length}`);
+}
 if (!onDisk.equals(bytes)) {
   fail("entry.txt does not match the review byte for byte");
+}
+if (onDisk.length > 0 && onDisk[0] === 0xef && onDisk[1] === 0xbb && onDisk[2] === 0xbf) {
+  fail("entry.txt must not start with a UTF-8 byte-order mark");
 }
 if (onDisk.length > 0 && onDisk[onDisk.length - 1] === 0x0a) {
   fail("entry.txt must not end with a newline");
